@@ -1,0 +1,404 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0d0d0d;
+  --surface: #141414;
+  --border: #222;
+  --text: #e8e8e8;
+  --muted: #444;
+  --accent: #7c6af7;
+  --green: #4ade80;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "JetBrains Mono", monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  user-select: none;
+}
+
+/* ── Top bar ──────────────────────────── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 280px;
+}
+
+.logo {
+  font-size: 0.65rem;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#streak-badge {
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: #333;
+  text-transform: uppercase;
+  transition: color 0.4s;
+}
+#streak-badge.active {
+  color: var(--accent);
+}
+
+/* ── Phase label ──────────────────────── */
+#phase-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.55em;
+  text-transform: uppercase;
+  color: var(--accent);
+  transition: color 0.4s;
+  min-height: 1rem;
+}
+
+/* ── Task input ───────────────────────── */
+#task-input {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  width: 340px;
+  padding: 0.15rem 0;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+  user-select: text;
+}
+#task-input:focus {
+  border-color: var(--border);
+  color: var(--text);
+}
+#task-input::placeholder {
+  color: #252525;
+}
+
+/* ── Timer ────────────────────────────── */
+#timer {
+  font-size: clamp(4rem, 12vw, 7rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text);
+  transition: color 0.4s;
+}
+
+/* ── Progress bar ─────────────────────── */
+.progress-track {
+  width: 280px;
+  height: 1px;
+  background: var(--border);
+}
+
+#progress-fill {
+  height: 1px;
+  background: var(--accent);
+  width: 100%;
+  transition:
+    width 1s linear,
+    background 0.4s;
+}
+
+/* ── Session dots ─────────────────────── */
+.dots {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border);
+  transition:
+    background 0.3s,
+    transform 0.3s;
+}
+
+.dot.done {
+  background: var(--accent);
+}
+.dot.current {
+  background: var(--text);
+  transform: scale(1.4);
+}
+
+/* ── Controls ─────────────────────────── */
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.55rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
+  border-radius: 2px;
+}
+
+.btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.btn.primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn.primary:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.btn.primary.break-mode {
+  border-color: var(--green);
+  color: var(--green);
+}
+.btn.primary.break-mode:hover {
+  background: var(--green);
+  color: #000;
+}
+
+/* ── Stats row ────────────────────────── */
+.stats-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.5rem;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.stats-sep {
+  color: var(--border);
+}
+
+/* ── Goal bar ─────────────────────────── */
+.goal-track {
+  width: 120px;
+  height: 1px;
+  background: var(--border);
+}
+
+#goal-fill {
+  height: 1px;
+  background: var(--accent);
+  width: 0%;
+  transition:
+    width 0.6s,
+    background 0.4s;
+}
+
+/* ── Quote ────────────────────────────── */
+#quote {
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.7;
+  opacity: 0;
+  transition: opacity 0.8s;
+  min-height: 1.2em;
+  font-style: italic;
+}
+#quote.visible {
+  opacity: 1;
+}
+
+/* ── Audio player bar ─────────────────── */
+#player-bar {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.45rem 0.8rem;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#player-bar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#play-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.55rem;
+  font-family: inherit;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+#play-btn:hover {
+  color: var(--text);
+}
+
+#vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 56px;
+  height: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+  border-radius: 1px;
+}
+#vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#vol-slider:hover::-webkit-slider-thumb {
+  background: var(--text);
+}
+
+/* ── Settings toggle ──────────────────── */
+#settings-toggle {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.25rem;
+}
+
+/* ── Settings panel ───────────────────── */
+#settings-panel {
+  position: fixed;
+  bottom: 3.5rem;
+  left: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.4rem;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+  min-width: 210px;
+}
+#settings-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.settings-title {
+  font-size: 0.48rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #333;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.setting-row label {
+  min-width: 70px;
+}
+
+.setting-row input[type="number"] {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.52rem;
+  width: 2.8rem;
+  text-align: center;
+  padding: 0.1rem;
+  outline: none;
+}
+
+.setting-row select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.52rem;
+  padding: 0.15rem 0.4rem;
+  outline: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.setting-row select:focus {
+  border-color: var(--accent);
+}
+
+.setting-row span {
+  color: #333;
+  font-size: 0.48rem;
+}
+
+/* ── Hidden YT iframe ─────────────────── */
+#yt-wrap {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Keyboard hint ────────────────────── */
+#kbd-hint {
+  font-size: 0.42rem;
+  letter-spacing: 0.2em;
+  color: #252525;
+  text-transform: uppercase;
+}

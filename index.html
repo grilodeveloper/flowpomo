@@ -1,410 +1,154 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlowPomo</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlowPomo</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="top-bar">
+      <span class="logo">FlowPomo</span>
+      <span id="streak-badge"></span>
+    </div>
 
-    :root {
-      --bg:      #0d0d0d;
-      --surface: #141414;
-      --border:  #222;
-      --text:    #e8e8e8;
-      --muted:   #444;
-      --accent:  #7c6af7;
-      --green:   #4ade80;
-    }
+    <div id="phase-label">foco</div>
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2.4rem;
-      user-select: none;
-    }
+    <input
+      type="text"
+      id="task-input"
+      placeholder="// no que você está trabalhando?"
+      maxlength="80"
+    />
 
-    /* ── Logo ─────────────────────────────── */
-    .logo {
-      font-size: 0.65rem;
-      letter-spacing: 0.45em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
+    <div id="timer">25:00</div>
 
-    /* ── Phase label ──────────────────────── */
-    #phase-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.55em;
-      text-transform: uppercase;
-      color: var(--accent);
-      transition: color 0.4s;
-      min-height: 1rem;
-    }
+    <div class="progress-track"><div id="progress-fill"></div></div>
 
-    /* ── Timer ────────────────────────────── */
-    #timer {
-      font-size: clamp(4rem, 12vw, 7rem);
-      font-weight: 300;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      color: var(--text);
-      transition: color 0.4s;
-    }
+    <div class="dots" id="dots">
+      <div class="dot current" data-i="0"></div>
+      <div class="dot" data-i="1"></div>
+      <div class="dot" data-i="2"></div>
+      <div class="dot" data-i="3"></div>
+    </div>
 
-    /* ── Session dots ─────────────────────── */
-    .dots {
-      display: flex;
-      gap: 0.55rem;
-      align-items: center;
-    }
+    <div class="controls">
+      <button class="btn" onclick="resetTimer()">reset</button>
+      <button class="btn primary" id="start-btn" onclick="toggleTimer()">
+        iniciar
+      </button>
+      <button class="btn" onclick="skipPhase()">skip</button>
+    </div>
 
-    .dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--border);
-      transition: background 0.3s, transform 0.3s;
-    }
+    <div class="stats-row">
+      <span id="cycle-info">ciclo 1</span>
+      <span class="stats-sep">·</span>
+      <span id="focus-time">00:00 foco</span>
+      <span class="stats-sep">·</span>
+      <span id="goal-info">0 / 6 sessões</span>
+    </div>
 
-    .dot.done    { background: var(--accent); }
-    .dot.current { background: var(--text); transform: scale(1.4); }
+    <div class="goal-track"><div id="goal-fill"></div></div>
 
-    /* ── Controls ─────────────────────────── */
-    .controls {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
+    <div id="quote"></div>
 
-    .btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 0.55rem 1.1rem;
-      font-family: inherit;
-      font-size: 0.6rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-      border-radius: 2px;
-    }
+    <div id="kbd-hint">space · iniciar &nbsp; r · reset &nbsp; s · skip</div>
 
-    .btn:hover { border-color: var(--text); color: var(--text); }
+    <!-- Minimal audio controls -->
+    <div id="player-bar">
+      <button id="play-btn" onclick="toggleAudio()">▶ play</button>
+      <input
+        id="vol-slider"
+        type="range"
+        min="0"
+        max="100"
+        value="50"
+        oninput="setVolume(this.value)"
+      />
+    </div>
 
-    .btn.primary {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    <!-- Settings toggle -->
+    <button class="btn" id="settings-toggle" onclick="toggleSettings()">
+      config
+    </button>
 
-    .btn.primary:hover {
-      background: var(--accent);
-      color: #000;
-    }
+    <!-- Settings panel -->
+    <div id="settings-panel">
+      <div class="settings-title">configurações</div>
+      <div class="setting-row">
+        <label>foco</label>
+        <input
+          type="number"
+          id="cfg-focus"
+          min="1"
+          max="90"
+          value="25"
+          onchange="applyConfig()"
+        />
+        <span>min</span>
+      </div>
+      <div class="setting-row">
+        <label>pausa curta</label>
+        <input
+          type="number"
+          id="cfg-short"
+          min="1"
+          max="30"
+          value="5"
+          onchange="applyConfig()"
+        />
+        <span>min</span>
+      </div>
+      <div class="setting-row">
+        <label>pausa longa</label>
+        <input
+          type="number"
+          id="cfg-long"
+          min="1"
+          max="60"
+          value="15"
+          onchange="applyConfig()"
+        />
+        <span>min</span>
+      </div>
+      <div class="setting-row">
+        <label>meta diária</label>
+        <input
+          type="number"
+          id="cfg-goal"
+          min="1"
+          max="20"
+          value="6"
+          onchange="applyConfig()"
+        />
+        <span>sessões</span>
+      </div>
+      <div class="setting-row">
+        <label>aviso</label>
+        <select id="cfg-sound" onchange="applyConfig()">
+          <option value="beep">beep</option>
+          <option value="chime">chime</option>
+          <option value="bell">bell</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>ambiente</label>
+        <select id="cfg-ambient" onchange="applyConfig()">
+          <option value="off">desligado</option>
+          <option value="noise">ruído branco</option>
+          <option value="rain">chuva</option>
+        </select>
+      </div>
+    </div>
 
-    .btn.primary.break-mode {
-      border-color: var(--green);
-      color: var(--green);
-    }
+    <!-- Hidden YouTube iframe (audio only) -->
+    <div id="yt-wrap"><div id="yt-player"></div></div>
 
-    .btn.primary.break-mode:hover {
-      background: var(--green);
-      color: #000;
-    }
-
-    /* ── Cycle counter ────────────────────── */
-    .cycle-info {
-      font-size: 0.55rem;
-      letter-spacing: 0.3em;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-
-    /* ── Quote ────────────────────────────── */
-    #quote {
-      font-size: 0.55rem;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      text-align: center;
-      max-width: 300px;
-      line-height: 1.7;
-      opacity: 0;
-      transition: opacity 0.8s;
-      min-height: 1.2em;
-      font-style: italic;
-    }
-    #quote.visible { opacity: 1; }
-
-    /* ── YouTube player ───────────────────── */
-    #yt-wrap {
-      position: fixed;
-      bottom: 1.25rem;
-      right: 1.25rem;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.5s, transform 0.5s;
-      pointer-events: none;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    #yt-wrap.visible {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-  </style>
-</head>
-<body>
-
-  <span class="logo">FlowPomo</span>
-
-  <div id="phase-label">foco</div>
-
-  <div id="timer">25:00</div>
-
-  <div class="dots" id="dots">
-    <div class="dot current" data-i="0"></div>
-    <div class="dot"         data-i="1"></div>
-    <div class="dot"         data-i="2"></div>
-    <div class="dot"         data-i="3"></div>
-  </div>
-
-  <div class="controls">
-    <button class="btn"         onclick="resetTimer()">reset</button>
-    <button class="btn primary" id="start-btn" onclick="toggleTimer()">iniciar</button>
-    <button class="btn"         onclick="skipPhase()">skip</button>
-  </div>
-
-  <div class="cycle-info" id="cycle-info">ciclo 1</div>
-
-  <div id="quote"></div>
-
-  <!-- YouTube player (small, bottom-right) -->
-  <div id="yt-wrap">
-    <div id="yt-player"></div>
-  </div>
-
-  <!-- YouTube IFrame API -->
-  <script>
-    // ── Config ─────────────────────────────────────────────
-    const FOCUS_S = 25 * 60;
-    const SHORT_S =  5 * 60;
-    const LONG_S  = 15 * 60;
-
-    const YT_VIDEO_ID = 't8OZPJfpcTM';
-    const YT_START    = 9728;
-
-    // ── Quotes ──────────────────────────────────────────────
-    const QUOTES = [
-      "A disciplina é a ponte entre metas e realizações.",
-      "Foco no processo, não no resultado.",
-      "Cada sessão concluída é uma vitória.",
-      "A concentração é a raiz de toda habilidade.",
-      "Pequenos passos, grandes conquistas.",
-      "O sucesso é a soma de pequenos esforços repetidos.",
-      "Feito é melhor que perfeito.",
-      "A persistência realiza o impossível.",
-      "Um passo de cada vez — mas nunca pare.",
-      "Você já chegou mais longe do que imagina.",
-      "Disciplina é escolher entre o que você quer agora e o que você mais quer.",
-      "O segredo é começar. Depois, é só continuar.",
-      "Dificuldades fortalecem a mente, assim como o trabalho fortalece o corpo.",
-      "Não é sobre ter tempo, é sobre fazer tempo.",
-      "O foco de hoje é a conquista de amanhã.",
-    ];
-
-    // ── State ───────────────────────────────────────────────
-    let phase        = 'focus';   // 'focus' | 'short' | 'long'
-    let sessionsDone = 0;         // completed focus sessions
-    let cycle        = 1;         // long-break cycle count
-    let timeLeft     = FOCUS_S;
-    let running      = false;
-    let ticker       = null;
-    let ytPlayer     = null;
-    let ytReady      = false;
-
-    // ── YouTube API ─────────────────────────────────────────
-    window.onYouTubeIframeAPIReady = function () {
-      ytPlayer = new YT.Player('yt-player', {
-        width: 220,
-        height: 124,
-        videoId: YT_VIDEO_ID,
-        playerVars: { start: YT_START, autoplay: 0, rel: 0, modestbranding: 1 },
-        events: { onReady: () => { ytReady = true; } }
-      });
-    };
-
-    // ── Timer logic ─────────────────────────────────────────
-    function toggleTimer() {
-      running ? pause() : start();
-    }
-
-    function start() {
-      hideQuote();
-      running = true;
-      document.getElementById('start-btn').textContent = 'pausar';
-      ticker = setInterval(tick, 1000);
-
-      if (ytReady) {
-        document.getElementById('yt-wrap').classList.add('visible');
-        ytPlayer.playVideo();
-      }
-    }
-
-    function pause() {
-      running = false;
-      clearInterval(ticker);
-      ticker = null;
-      document.getElementById('start-btn').textContent = 'iniciar';
-      if (ytReady) {
-        ytPlayer.pauseVideo();
-        document.getElementById('yt-wrap').classList.remove('visible');
-      }
-    }
-
-    function resetTimer() {
-      pause();
-      phase        = 'focus';
-      sessionsDone = 0;
-      cycle        = 1;
-      timeLeft     = FOCUS_S;
-      renderAll();
-    }
-
-    function skipPhase() {
-      clearInterval(ticker);
-      running = false;
-      advance();
-      start();
-    }
-
-    function tick() {
-      timeLeft--;
-      if (timeLeft <= 0) {
-        const wasPhase = phase;
-        pause();
-        beep();
-        advance();
-        if (wasPhase === 'focus') showQuote();
-      } else {
-        renderTimer();
-      }
-    }
-
-    function advance() {
-      if (phase === 'focus') {
-        sessionsDone++;
-        if (sessionsDone % 4 === 0) {
-          phase    = 'long';
-          timeLeft = LONG_S;
-        } else {
-          phase    = 'short';
-          timeLeft = SHORT_S;
-        }
-      } else {
-        if (phase === 'long') cycle++;
-        phase    = 'focus';
-        timeLeft = FOCUS_S;
-      }
-      renderAll();
-    }
-
-    // ── Render ───────────────────────────────────────────────
-    function renderAll() {
-      renderTimer();
-      renderPhase();
-      renderDots();
-      renderCycle();
-      updateStartBtn();
-    }
-
-    function renderTimer() {
-      const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-      const s = String(timeLeft % 60).padStart(2, '0');
-      const display = `${m}:${s}`;
-      document.getElementById('timer').textContent = display;
-      document.title = `${display} — FlowPomo`;
-    }
-
-    function renderPhase() {
-      const labels = { focus: 'foco', short: 'pausa curta', long: 'pausa longa' };
-      const colors = { focus: 'var(--accent)', short: 'var(--green)', long: 'var(--green)' };
-      const el = document.getElementById('phase-label');
-      el.textContent  = labels[phase];
-      el.style.color  = colors[phase];
-
-      const timerEl = document.getElementById('timer');
-      timerEl.style.color = phase === 'focus' ? 'var(--text)' : 'var(--green)';
-    }
-
-    function renderDots() {
-      const pos = sessionsDone % 4;
-      document.querySelectorAll('.dot').forEach((dot, i) => {
-        dot.classList.remove('done', 'current');
-        if (i < pos)   dot.classList.add('done');
-        if (i === pos) dot.classList.add('current');
-      });
-    }
-
-    function renderCycle() {
-      document.getElementById('cycle-info').textContent = `ciclo ${cycle}`;
-    }
-
-    function updateStartBtn() {
-      const btn = document.getElementById('start-btn');
-      if (phase !== 'focus') {
-        btn.classList.add('break-mode');
-      } else {
-        btn.classList.remove('break-mode');
-      }
-      btn.textContent = running ? 'pausar' : 'iniciar';
-    }
-
-    // ── Quote ────────────────────────────────────────────────
-    function showQuote() {
-      const el = document.getElementById('quote');
-      el.textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-      el.classList.add('visible');
-    }
-
-    function hideQuote() {
-      const el = document.getElementById('quote');
-      el.classList.remove('visible');
-    }
-
-    // ── Beep (Web Audio) ─────────────────────────────────────
-    function beep() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        [0, 0.35, 0.7].forEach(delay => {
-          const osc  = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.type = 'sine';
-          osc.frequency.value = 528;
-          gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.25);
-          osc.start(ctx.currentTime + delay);
-          osc.stop(ctx.currentTime + delay + 0.25);
-        });
-      } catch (_) {}
-    }
-
-    // ── Init ─────────────────────────────────────────────────
-    renderAll();
-  </script>
-  <script src="https://www.youtube.com/iframe_api"></script>
-</body>
+    <script src="main.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+  </body>
 </html>
