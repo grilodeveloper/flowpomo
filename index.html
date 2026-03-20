@@ -128,6 +128,21 @@
       text-transform: uppercase;
     }
 
+    /* ── Quote ────────────────────────────── */
+    #quote {
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: center;
+      max-width: 300px;
+      line-height: 1.7;
+      opacity: 0;
+      transition: opacity 0.8s;
+      min-height: 1.2em;
+      font-style: italic;
+    }
+    #quote.visible { opacity: 1; }
+
     /* ── YouTube player ───────────────────── */
     #yt-wrap {
       position: fixed;
@@ -173,6 +188,8 @@
 
   <div class="cycle-info" id="cycle-info">ciclo 1</div>
 
+  <div id="quote"></div>
+
   <!-- YouTube player (small, bottom-right) -->
   <div id="yt-wrap">
     <div id="yt-player"></div>
@@ -187,6 +204,25 @@
 
     const YT_VIDEO_ID = 't8OZPJfpcTM';
     const YT_START    = 9728;
+
+    // ── Quotes ──────────────────────────────────────────────
+    const QUOTES = [
+      "A disciplina é a ponte entre metas e realizações.",
+      "Foco no processo, não no resultado.",
+      "Cada sessão concluída é uma vitória.",
+      "A concentração é a raiz de toda habilidade.",
+      "Pequenos passos, grandes conquistas.",
+      "O sucesso é a soma de pequenos esforços repetidos.",
+      "Feito é melhor que perfeito.",
+      "A persistência realiza o impossível.",
+      "Um passo de cada vez — mas nunca pare.",
+      "Você já chegou mais longe do que imagina.",
+      "Disciplina é escolher entre o que você quer agora e o que você mais quer.",
+      "O segredo é começar. Depois, é só continuar.",
+      "Dificuldades fortalecem a mente, assim como o trabalho fortalece o corpo.",
+      "Não é sobre ter tempo, é sobre fazer tempo.",
+      "O foco de hoje é a conquista de amanhã.",
+    ];
 
     // ── State ───────────────────────────────────────────────
     let phase        = 'focus';   // 'focus' | 'short' | 'long'
@@ -215,6 +251,7 @@
     }
 
     function start() {
+      hideQuote();
       running = true;
       document.getElementById('start-btn').textContent = 'pausar';
       ticker = setInterval(tick, 1000);
@@ -227,9 +264,13 @@
 
     function pause() {
       running = false;
-      document.getElementById('start-btn').textContent = 'iniciar';
       clearInterval(ticker);
-      if (ytReady) ytPlayer.pauseVideo();
+      ticker = null;
+      document.getElementById('start-btn').textContent = 'iniciar';
+      if (ytReady) {
+        ytPlayer.pauseVideo();
+        document.getElementById('yt-wrap').classList.remove('visible');
+      }
     }
 
     function resetTimer() {
@@ -251,8 +292,11 @@
     function tick() {
       timeLeft--;
       if (timeLeft <= 0) {
+        const wasPhase = phase;
+        pause();
         beep();
         advance();
+        if (wasPhase === 'focus') showQuote();
       } else {
         renderTimer();
       }
@@ -327,20 +371,34 @@
       btn.textContent = running ? 'pausar' : 'iniciar';
     }
 
+    // ── Quote ────────────────────────────────────────────────
+    function showQuote() {
+      const el = document.getElementById('quote');
+      el.textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+      el.classList.add('visible');
+    }
+
+    function hideQuote() {
+      const el = document.getElementById('quote');
+      el.classList.remove('visible');
+    }
+
     // ── Beep (Web Audio) ─────────────────────────────────────
     function beep() {
       try {
-        const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type      = 'sine';
-        osc.frequency.value = 528;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.8);
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.35, 0.7].forEach(delay => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = 528;
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.25);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.25);
+        });
       } catch (_) {}
     }
 
