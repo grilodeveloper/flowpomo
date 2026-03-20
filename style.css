@@ -1,3 +1,5 @@
+/* FlowPomo — Jhonnyssom Silva, 2026 */
+
 *,
 *::before,
 *::after {
@@ -401,4 +403,12 @@ body {
   letter-spacing: 0.2em;
   color: #252525;
   text-transform: uppercase;
+}
+
+#credit {
+  font-size: 0.38rem;
+  letter-spacing: 0.2em;
+  color: #1e1e1e;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
 }

@@ -53,3 +53,7 @@ flowpomo/
 ## Stack
 
 HTML + CSS + JS puro. Web Audio API para sons. YouTube IFrame API para música de fundo.
+
+---
+
+Desenvolvido por **Jhonnyssom Silva** — 2026

@@ -1,3 +1,5 @@
+// FlowPomo — Jhonnyssom Silva, 2026
+
 // ── Quotes ──────────────────────────────────────────────
 const QUOTES = [
   "A disciplina é a ponte entre metas e realizações.",
