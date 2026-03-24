@@ -30,16 +30,23 @@ let config = {
 };
 
 // ── State ───────────────────────────────────────────────
-let phase           = "focus";
-let sessionsDone    = 0;
-let cycle           = 1;
-let timeLeft        = config.focusMin * 60;
-let currentPhaseDur = config.focusMin * 60;
-let focusSeconds    = 0;
-let todaySessions   = 0;
-let streak          = 0;
-let running         = false;
-let ticker          = null;
+let phase            = "focus";
+let sessionsDone     = 0;
+let cycle            = 1;
+let timeLeft         = config.focusMin * 60;
+let currentPhaseDur  = config.focusMin * 60;
+let todaySessions    = 0;
+let streak           = 0;
+let running          = false;
+let ticker           = null;
+
+// Wall-clock timing (evita throttle de aba inativa)
+let startedAt        = null; // Date.now() no início do run atual
+let timeLeftAtStart  = 0;    // timeLeft no momento do start
+
+// Contador de foco via wall-clock
+let focusStartedAt   = null; // Date.now() quando o período de foco atual começou
+let focusSecondsBase = 0;    // segundos acumulados de foco antes do run atual
 
 // YouTube
 let ytPlayer     = null;
@@ -235,7 +242,10 @@ function toggleTimer() { running ? pause() : start(); }
 function start() {
   requestNotify();
   hideQuote();
-  running = true;
+  running       = true;
+  startedAt     = Date.now();
+  timeLeftAtStart = timeLeft;
+  if (phase === "focus") focusStartedAt = Date.now();
   document.getElementById("start-btn").textContent = "pausar";
   ticker = setInterval(tick, 1000);
   if (phase === "focus") startAmbient();
@@ -243,6 +253,15 @@ function start() {
 }
 
 function pause() {
+  // Captura o tempo real antes de parar (evita drift por throttle)
+  if (startedAt !== null) {
+    timeLeft  = Math.max(0, timeLeftAtStart - Math.floor((Date.now() - startedAt) / 1000));
+    startedAt = null;
+  }
+  if (focusStartedAt !== null) {
+    focusSecondsBase += Math.floor((Date.now() - focusStartedAt) / 1000);
+    focusStartedAt = null;
+  }
   running = false;
   clearInterval(ticker);
   ticker = null;
@@ -253,32 +272,32 @@ function pause() {
 
 function resetTimer() {
   pause();
-  phase           = "focus";
-  sessionsDone    = 0;
-  cycle           = 1;
-  timeLeft        = currentPhaseDur = config.focusMin * 60;
-  focusSeconds    = 0;
+  phase            = "focus";
+  sessionsDone     = 0;
+  cycle            = 1;
+  timeLeft         = currentPhaseDur = config.focusMin * 60;
+  focusSecondsBase = 0;
+  focusStartedAt   = null;
+  startedAt        = null;
   document.getElementById("task-input").value = "";
   renderAll();
 }
 
 function skipPhase() {
-  clearInterval(ticker);
-  running = false;
-  stopAmbient();
+  pause();
   advance();
   start();
 }
 
 function tick() {
-  if (phase === "focus") {
-    focusSeconds++;
-    renderFocusTime();
-  }
-  timeLeft--;
+  if (startedAt === null) return;
+
+  // Tempo real decorrido — imune ao throttle de aba inativa
+  timeLeft = Math.max(0, timeLeftAtStart - Math.floor((Date.now() - startedAt) / 1000));
+
   if (timeLeft <= 0) {
     const wasPhase = phase;
-    pause();
+    pause(); // já captura focusSecondsBase corretamente
     beep();
     if (wasPhase === "focus") {
       saveSession();
@@ -291,6 +310,7 @@ function tick() {
   } else {
     renderTimer();
     renderProgress();
+    renderFocusTime();
   }
 }
 
@@ -324,6 +344,12 @@ document.addEventListener("click", (e) => {
   if (panel.classList.contains("open") && !panel.contains(e.target) && e.target !== toggle) {
     panel.classList.remove("open");
   }
+});
+
+// ── Visibilidade da aba ──────────────────────────────────
+// Força recálculo imediato ao retornar para a aba (desfaz throttle do browser)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && running) tick();
 });
 
 // ── Keyboard shortcuts ───────────────────────────────────
@@ -385,9 +411,11 @@ function renderCycle() {
 }
 
 function renderFocusTime() {
-  const h = Math.floor(focusSeconds / 3600);
-  const m = Math.floor((focusSeconds % 3600) / 60);
-  const s = focusSeconds % 60;
+  const extra = focusStartedAt !== null ? Math.floor((Date.now() - focusStartedAt) / 1000) : 0;
+  const fs = focusSecondsBase + extra;
+  const h  = Math.floor(fs / 3600);
+  const m  = Math.floor((fs % 3600) / 60);
+  const s  = fs % 60;
   const display = h > 0
     ? `${h}h ${String(m).padStart(2, "0")}m foco`
     : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} foco`;
