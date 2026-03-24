@@ -177,7 +177,7 @@ function startAmbient() {
   if (config.ambient === "off") return;
   stopAmbient();
   try {
-    ambCtx = new (window.AudioContext || window.webkitAudioContext)();
+    ambCtx = new (window.AudioContext || window["webkitAudioContext"])();
     const rate = ambCtx.sampleRate;
     const buf  = ambCtx.createBuffer(1, rate * 3, rate);
     const data = buf.getChannelData(0);
@@ -211,7 +211,7 @@ function stopAmbient() {
 // ── Beep / sound alerts ──────────────────────────────────
 function beep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = new (window.AudioContext || window["webkitAudioContext"])();
     if (config.sound === "chime") {
       [[0, 523, 0.3], [0.25, 659, 0.25], [0.5, 784, 0.35]].forEach(([d, f, v]) => tone(ctx, f, d, 0.4, v));
     } else if (config.sound === "bell") {
@@ -457,7 +457,28 @@ function hideQuote() {
   document.getElementById("quote").classList.remove("visible");
 }
 
+// ── Zoom ─────────────────────────────────────────────────
+const ZOOM_LEVELS = [0.75, 0.875, 1, 1.125, 1.25, 1.5];
+let zoomIndex = 2; // padrão: 1× (índice 2)
+
+function adjustZoom(dir) {
+  zoomIndex = Math.max(0, Math.min(ZOOM_LEVELS.length - 1, zoomIndex + dir));
+  applyZoom();
+  localStorage.setItem("fp_zoom", zoomIndex);
+}
+
+function applyZoom() {
+  document.documentElement.style.fontSize = (16 * ZOOM_LEVELS[zoomIndex]) + "px";
+}
+
+function loadZoom() {
+  const stored = localStorage.getItem("fp_zoom");
+  if (stored !== null) zoomIndex = parseInt(stored);
+  applyZoom();
+}
+
 // ── Init ─────────────────────────────────────────────────
 loadConfig();
 loadHistory();
+loadZoom();
 renderAll();

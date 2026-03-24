@@ -73,10 +73,12 @@
       />
     </div>
 
-    <!-- Settings toggle -->
-    <button class="btn" id="settings-toggle" onclick="toggleSettings()">
-      config
-    </button>
+    <!-- Bottom-left controls: config + zoom -->
+    <div id="bottom-left">
+      <button class="btn" id="settings-toggle" onclick="toggleSettings()">config</button>
+      <button class="btn" onclick="adjustZoom(-1)">A−</button>
+      <button class="btn" onclick="adjustZoom(+1)">A+</button>
+    </div>
 
     <!-- Settings panel -->
     <div id="settings-panel">

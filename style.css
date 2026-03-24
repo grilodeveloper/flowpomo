@@ -300,11 +300,14 @@ body {
   background: var(--text);
 }
 
-/* ── Settings toggle ──────────────────── */
-#settings-toggle {
+/* ── Bottom-left controls ─────────────── */
+#bottom-left {
   position: fixed;
   bottom: 1.25rem;
   left: 1.25rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 /* ── Settings panel ───────────────────── */
